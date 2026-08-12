@@ -1,0 +1,37 @@
+name: Agent Review
+
+on:
+  workflow_dispatch:
+    inputs:
+      artifact_url:
+        description: Dataverse deployment-artifact download URL
+        required: true
+        type: string
+      callback_url:
+        description: Power Automate callback URL
+        required: true
+        type: string
+      callback_secret:
+        description: Optional callback validation secret
+        required: false
+        type: string
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Review agent
+        uses: ./agent-review-pipeline
+        env:
+          CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          TENANT_ID: ${{ secrets.TENANT_ID }}
+          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+        with:
+          artifact_url: ${{ inputs.artifact_url }}
+          callback_url: ${{ inputs.callback_url }}
+          callback_secret: ${{ inputs.callback_secret }}
+          threshold: "60"
