@@ -148,10 +148,19 @@ export interface CSZipBot {
     iconBase64?: string;
     description?: string;
 }
+/** Safe, aggregate diagnostics for troubleshooting solution ZIP parsing. */
+export interface CSZipDiagnostics {
+    zipEntryCount: number;
+    topLevelEntries: string[];
+    botXmlCount: number;
+    botComponentXmlCount: number;
+    botDataCount: number;
+}
 /** Full parsed result from a Copilot Studio solution ZIP. */
 export interface CSZipParseResult {
     bots: CSZipBot[];
     componentsBySchemaName: Record<string, BotComponent[]>;
+    diagnostics: CSZipDiagnostics;
 }
 /** Contract implemented by the YAML parsing service. */
 export interface IYamlParsingService {

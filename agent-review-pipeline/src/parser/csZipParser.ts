@@ -35,6 +35,17 @@ export async function parseCSZip(buffer: Buffer): Promise<CSZipParseResult> {
     throw new Error('Not a Copilot Studio solution ZIP: missing [Content_Types].xml or solution.xml.');
   }
 
+  const zipEntryPaths = Object.keys(zip.files);
+  const topLevelEntries = [...new Set(
+    zipEntryPaths
+      .map((filePath) => filePath.split('/')[0])
+      .filter((entry): entry is string => Boolean(entry)),
+  )].sort();
+  const botXmlCount = zipEntryPaths.filter((filePath) => /^bots\/[^/]+\/bot\.xml$/i.test(filePath)).length;
+  const botComponentXmlCount = zipEntryPaths
+    .filter((filePath) => /^botcomponents\/[^/]+\/botcomponent\.xml$/i.test(filePath)).length;
+  const botDataCount = zipEntryPaths.filter((filePath) => /^botcomponents\/[^/]+\/data$/i.test(filePath)).length;
+
   const bots: CSZipBot[] = [];
   const componentsBySchemaName: Record<string, BotComponent[]> = {};
 
@@ -149,7 +160,17 @@ export async function parseCSZip(buffer: Buffer): Promise<CSZipParseResult> {
     componentsBySchemaName[parentSchemaName].push(component);
   }
 
-  return { bots, componentsBySchemaName };
+  return {
+    bots,
+    componentsBySchemaName,
+    diagnostics: {
+      zipEntryCount: zipEntryPaths.length,
+      topLevelEntries,
+      botXmlCount,
+      botComponentXmlCount,
+      botDataCount,
+    },
+  };
 }
 
 function resolveParentSchemaName(folder: string, knownSchemaNames: string[]): string | null {
