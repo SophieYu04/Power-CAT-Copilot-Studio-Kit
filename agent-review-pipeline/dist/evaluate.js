@@ -57,12 +57,28 @@ const stageAOutputs = Array.isArray(parsed) ? parsed : [parsed];
 const validOutputs = stageAOutputs.filter((o) => o && (o.topicComponents?.length || o.agentInstructions?.trim()));
 if (validOutputs.length === 0) {
     console.error('Stage A output is empty or has no evaluatable content');
+    const threshold = parseInt(values.threshold ?? '60', 10);
     const emptyResult = {
         agents: [],
-        overall: { passed: true, lowestScore: 100, threshold: parseInt(values.threshold ?? '60', 10), agentCount: 0 },
+        overall: { passed: false, lowestScore: 0, threshold, agentCount: 0 },
+        // Keep the legacy shape because the callback Flow reads scores.passed.
+        scores: {
+            passed: false,
+            overallScore: 0,
+            threshold,
+            patternScore: 0,
+            instructionScore: 0,
+        },
         errors: ['No evaluatable content in Stage A output'],
     };
-    console.log(JSON.stringify(emptyResult, null, 2));
+    const jsonOutput = JSON.stringify(emptyResult, null, 2);
+    if (values.output) {
+        writeFileSync(values.output, jsonOutput);
+        console.error(`Evaluation result written to ${values.output}`);
+    }
+    else {
+        console.log(jsonOutput);
+    }
     process.exit(0);
 }
 // Run evaluation for each agent

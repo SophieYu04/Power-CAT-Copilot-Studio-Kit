@@ -16,7 +16,10 @@ const zipBuffer = readFileSync(values.zip);
 const { bots, componentsBySchemaName } = await parseCSZip(zipBuffer);
 const stageAService = new StageAService();
 const results = [];
-for (const bot of bots.filter((candidate) => candidate.generativeActionsEnabled)) {
+// Evaluate every agent found in the solution ZIP.
+// Do not exclude modern Copilot Studio agents that lack
+// settings.GenerativeActionsEnabled.
+for (const bot of bots) {
     const components = componentsBySchemaName[bot.schemaName] || [];
     const metadata = zipBotToMetadata(bot);
     const result = await stageAService.executeStageAFromData({ botId: metadata.botId, name: metadata.name, description: bot.description }, components);
