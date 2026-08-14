@@ -21,6 +21,24 @@ console.error(`[Stage A diagnostics] bot.xml files: ${diagnostics.botXmlCount}`)
 console.error(`[Stage A diagnostics] botcomponent.xml files: ${diagnostics.botComponentXmlCount}`);
 console.error(`[Stage A diagnostics] botcomponent data files: ${diagnostics.botDataCount}`);
 console.error(`[Stage A diagnostics] bots parsed: ${bots.length}`);
+const parsedComponents = Object.values(componentsBySchemaName).flat();
+const componentTypeCounts = new Map();
+for (const component of parsedComponents) {
+    componentTypeCounts.set(component.componenttype, (componentTypeCounts.get(component.componenttype) || 0) + 1);
+}
+const componentTypeSummary = [...componentTypeCounts.entries()]
+    .sort(([left], [right]) => left.localeCompare(right, undefined, { numeric: true }))
+    .map(([type, count]) => `${type}:${count}`)
+    .join(', ');
+console.error(`[Stage A diagnostics] components parsed: ${parsedComponents.length}`);
+console.error(`[Stage A diagnostics] component types: ${componentTypeSummary || '(none)'}`);
+// Print only classification metadata, never component names or YAML content.
+parsedComponents.forEach((component, index) => {
+    const payload = component.data || component.content || '';
+    const yamlKind = /^\s*kind\s*:\s*([A-Za-z0-9_.-]+)/m.exec(payload)?.[1] || '(none)';
+    console.error(`[Stage A diagnostics] component ${index + 1}: type=${component.componenttype}, `
+        + `payload characters=${payload.length}, YAML kind=${yamlKind}`);
+});
 const stageAService = new StageAService();
 const results = [];
 // Evaluate every agent found in the solution ZIP.
